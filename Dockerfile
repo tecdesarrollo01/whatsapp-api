@@ -7,9 +7,9 @@ ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
 
 WORKDIR /app
 
-# Instalar dependencias
+# Instalar dependencias (solo producción)
 COPY package*.json ./
-RUN npm ci --only=production --legacy-peer-deps
+RUN npm install --omit=dev --legacy-peer-deps
 
 # Copiar código fuente
 COPY . .
