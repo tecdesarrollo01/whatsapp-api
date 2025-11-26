@@ -13,11 +13,50 @@ npm run dev
 # Iniciar cliente
 curl -X POST http://localhost:3000/api/session/start
 
-# Obtener QR (guardar como qr.html para ver)
+# Obtener QR (guardar como qr.json)
 curl http://localhost:3000/api/session/qr > qr.json
 
 # Ver estado
 curl http://localhost:3000/api/session/status
+```
+
+### 2b. Visualizar QR en HTML legible (Windows/Mac/Linux)
+
+**Opción 1: Usar el script PowerShell (Windows)**
+```powershell
+.\scripts\generate-qr-viewer.ps1
+# Te pedirá el dominio (ej: http://localhost:3000)
+# Se abrirá automáticamente en tu navegador
+```
+
+**Opción 2: Usar el script Bash (Mac/Linux)**
+```bash
+chmod +x scripts/generate-qr-viewer.sh
+./scripts/generate-qr-viewer.sh
+# Te pedirá el dominio (ej: http://localhost:3000)
+# Se abrirá automáticamente en tu navegador
+```
+
+**Opción 3: Desde Node.js directamente**
+```bash
+# Obtener QR y convertir a HTML
+curl http://localhost:3000/api/session/qr | jq -r '.qr' | xargs -I {} node src/utils/qr-viewer.js {}
+
+# O especificar archivo de salida
+curl http://localhost:3000/api/session/qr | jq -r '.qr' | xargs -I {} node src/utils/qr-viewer.js {} mi-qr.html
+```
+
+**Opción 4: Desde JavaScript**
+```javascript
+const { createQRViewer } = require('./src/utils/qr-viewer');
+
+// Obtener QR de la API
+const response = await fetch('http://localhost:3000/api/session/qr');
+const { qr } = await response.json();
+
+// Generar HTML
+const filePath = createQRViewer(qr, 'mi-qr.html');
+console.log(`QR guardado en: ${filePath}`);
 ```
 
 ### 3. Enviar primer mensaje

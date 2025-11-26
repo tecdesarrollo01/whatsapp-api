@@ -78,7 +78,7 @@ export const getQR = async (req, res) => {
       warning: WARNING
     });
   } catch (error) {
-    console.error('❌ Error obteniendo QR:', error);
+    logger.error({ err: error }, 'Error obteniendo QR');
     return res.status(500).json({
       success: false,
       error: 'Error obteniendo QR',
@@ -102,7 +102,7 @@ export const getSessionStatus = async (req, res) => {
       warning: WARNING
     });
   } catch (error) {
-    console.error('❌ Error obteniendo estado:', error);
+    logger.error({ err: error }, 'Error obteniendo estado');
     return res.status(500).json({
       success: false,
       error: 'Error obteniendo estado',
@@ -121,7 +121,7 @@ export const logout = async (req, res) => {
       warning: WARNING
     });
   } catch (error) {
-    console.error('❌ Error cerrando sesión:', error);
+    logger.error({ err: error }, 'Error cerrando sesión');
     return res.status(500).json({
       success: false,
       error: 'Error cerrando sesión: ' + error.message,

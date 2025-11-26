@@ -103,7 +103,7 @@ app.use((req, res) => {
 
 // ============ MANEJO DE ERRORES GLOBAL ============
 app.use((error, req, res, next) => {
-  console.error('❌ Error no manejado:', error);
+  logger.error({ err: error }, 'Error no manejado');
   res.status(500).json({
     success: false,
     error: 'Error interno del servidor',
@@ -113,43 +113,23 @@ app.use((error, req, res, next) => {
 
 // ============ GRACEFUL SHUTDOWN ============
 const server = app.listen(PORT, () => {
-  console.log(`
-╔═════════════════════════════════════════╗
-║   WhatsApp API escuchando en :${PORT}      ║
-║   Servidor listo para recibir requests   ║
-╚═════════════════════════════════════════╝
-
-⚠️  ADVERTENCIA CRÍTICA:
-WhatsApp NO permite bots o clientes no oficiales.
-El uso de esta API puede resultar en:
-- Bloqueo temporal o permanente del número
-- Pérdida de acceso a WhatsApp
-- No hay garantía de que el número no será bloqueado
-
-Para minimizar riesgos:
-✓ NO enviar más de 10-15 mensajes por minuto
-✓ NO enviar mensajes masivos
-✓ NO usar en producción con números importantes
-✓ Implementar delays entre mensajes (mínimo 3-5 segundos)
-✓ Usar números de prueba, nunca números comerciales críticos
-
-Para más información, consulta el README.md
-  `);
+  logger.info(`WhatsApp API escuchando en puerto ${PORT}`);
+  logger.warn(`ADVERTENCIA CRÍTICA: WhatsApp NO permite bots o clientes no oficiales. El uso de esta API puede resultar en bloqueo del número.`);
 });
 
 // Manejo de señales de terminación
 process.on('SIGINT', async () => {
-  console.log('\n⏹️  Cerrando servidor...');
+  logger.info('Cerrando servidor por SIGINT...');
   server.close(() => {
-    console.log('✅ Servidor cerrado');
+    logger.info('Servidor cerrado');
     process.exit(0);
   });
 });
 
 process.on('SIGTERM', async () => {
-  console.log('\n⏹️  Cerrando servidor por SIGTERM...');
+  logger.info('Cerrando servidor por SIGTERM...');
   server.close(() => {
-    console.log('✅ Servidor cerrado');
+    logger.info('Servidor cerrado');
     process.exit(0);
   });
 });
