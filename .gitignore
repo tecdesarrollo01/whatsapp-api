@@ -37,3 +37,7 @@ build/
 
 # Navegador/artefactos locales de Chrome/Playwright
 chrome/
+
+# WhatsApp Session
+.wwebjs_auth/
+wwebjs_auth/
