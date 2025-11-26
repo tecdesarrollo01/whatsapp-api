@@ -11,6 +11,11 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Confiar en el proxy (Render / Nginx / etc.) para que express-rate-limit
+// pueda leer correctamente la IP del cliente desde X-Forwarded-For
+// y evitar ERR_ERL_UNEXPECTED_X_FORWARDED_FOR
+app.set('trust proxy', 1);
+
 // ============ MIDDLEWARES DE SEGURIDAD ============
 app.use(helmet({
   contentSecurityPolicy: {
