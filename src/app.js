@@ -6,6 +6,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import apiRoutes from './routes/api.routes.js';
 import { generalLimiter } from './middlewares/rate-limit.middleware.js';
+import logger from './logger.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -15,6 +16,26 @@ const PORT = process.env.PORT || 3000;
 // pueda leer correctamente la IP del cliente desde X-Forwarded-For
 // y evitar ERR_ERL_UNEXPECTED_X_FORWARDED_FOR
 app.set('trust proxy', 1);
+
+// Logger de requests HTTP
+app.use((req, res, next) => {
+  const start = Date.now();
+  const { method, originalUrl } = req;
+
+  logger.info({ method, url: originalUrl }, 'Incoming request');
+
+  res.on('finish', () => {
+    const durationMs = Date.now() - start;
+    logger.info({
+      method,
+      url: originalUrl,
+      statusCode: res.statusCode,
+      durationMs
+    }, 'Request completed');
+  });
+
+  next();
+});
 
 // ============ MIDDLEWARES DE SEGURIDAD ============
 app.use(helmet({

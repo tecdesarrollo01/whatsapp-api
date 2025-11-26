@@ -11,6 +11,7 @@ import {
 } from '../controllers/message.controller.js';
 import { authMiddleware } from '../middlewares/auth.middleware.js';
 import { messageLimiter } from '../middlewares/rate-limit.middleware.js';
+import logger from '../logger.js';
 
 const router = Router();
 
@@ -49,6 +50,7 @@ router.get(
 
 // ============ RUTA HEALTH CHECK ============
 router.get('/health', (req, res) => {
+  logger.debug('GET /api/health recibido');
   res.status(200).json({
     success: true,
     message: 'API de WhatsApp está funcionando',

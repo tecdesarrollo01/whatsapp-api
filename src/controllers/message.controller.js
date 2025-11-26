@@ -1,10 +1,13 @@
 import whatsappService from '../services/whatsapp.service.js';
+import logger from '../logger.js';
 
 const WARNING = '⚠️ No envíes mensajes masivos. Riesgo de bloqueo. Lee la documentación.';
 
 export const sendMessage = async (req, res) => {
   try {
     const { number, message } = req.body;
+
+    logger.info({ number, hasMessage: !!message }, 'POST /api/messages/send recibido');
 
     // Validaciones básicas
     if (!number || !message) {
@@ -35,7 +38,9 @@ export const sendMessage = async (req, res) => {
     }
 
     // Enviar mensaje
+    logger.info({ number }, 'Enviando mensaje vía WhatsAppService');
     const result = await whatsappService.sendMessage(number, message);
+    logger.info({ number, result }, 'Mensaje enviado correctamente por WhatsAppService');
 
     return res.status(200).json({
       success: true,
@@ -44,7 +49,7 @@ export const sendMessage = async (req, res) => {
       warning: WARNING
     });
   } catch (error) {
-    console.error('❌ Error en sendMessage:', error);
+    logger.error({ err: error }, '❌ Error en sendMessage');
 
     // Determinar tipo de error
     let statusCode = 500;
@@ -72,6 +77,7 @@ export const sendMessage = async (req, res) => {
 
 export const getStatus = async (req, res) => {
   try {
+    logger.info('GET /api/messages/status recibido');
     const status = whatsappService.getStatus();
 
     return res.status(200).json({
@@ -80,7 +86,7 @@ export const getStatus = async (req, res) => {
       warning: '⚠️ Usar WhatsApp Web.js puede resultar en bloqueo de tu número'
     });
   } catch (error) {
-    console.error('❌ Error en getStatus:', error);
+    logger.error({ err: error }, '❌ Error en getStatus');
     return res.status(500).json({
       success: false,
       error: 'Error al obtener estado',
