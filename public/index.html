@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WhatsApp API - Panel de Control</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 500px;
+            width: 100%;
+            padding: 30px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: #333;
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .warning {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 20px;
+            color: #856404;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .warning strong {
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        .qr-section,
+        .chat-section {
+            display: none;
+        }
+
+        .qr-section.active,
+        .chat-section.active {
+            display: block;
+        }
+
+        .qr-container {
+            text-align: center;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+
+        .qr-container img {
+            max-width: 100%;
+            height: auto;
+            border: 2px solid #667eea;
+            border-radius: 8px;
+        }
+
+        .qr-container.loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 300px;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .status {
+            text-align: center;
+            padding: 15px;
+            background: #e8f5e9;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            color: #2e7d32;
+            font-weight: bold;
+        }
+
+        .status.error {
+            background: #ffebee;
+            color: #c62828;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #333;
+            font-weight: 600;
+            font-size: 13px;
+        }
+
+        input,
+        textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-family: inherit;
+            font-size: 14px;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        input:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        button:hover:not(:disabled) {
+            background: #5568d3;
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .button-group button {
+            flex: 1;
+        }
+
+        button.secondary {
+            background: #f44336;
+        }
+
+        button.secondary:hover:not(:disabled) {
+            background: #da190b;
+        }
+
+        .info-box {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+            font-size: 13px;
+            color: #1565c0;
+            line-height: 1.6;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+            color: #999;
+            font-size: 12px;
+        }
+
+        .api-key-notice {
+            background: #f44336;
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            font-size: 12px;
+        }
+
+        .success-message {
+            display: none;
+            background: #4caf50;
+            color: white;
+            padding: 12px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .success-message.show {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📱 WhatsApp API</h1>
+            <p>Panel de Control Interactivo</p>
+        </div>
+
+        <div class="warning">
+            <strong>⚠️ ADVERTENCIA CRÍTICA</strong>
+            WhatsApp NO permite bots. Riesgo de bloqueo permanente.
+            <br>Usa solo números de prueba.
+        </div>
+
+        <!-- QR Section -->
+        <div class="qr-section active" id="qrSection">
+            <h2 style="text-align: center; margin-bottom: 15px;">Conectar WhatsApp</h2>
+            <div class="info-box">
+                <strong>Instrucciones:</strong>
+                <ol style="margin-left: 20px; margin-top: 8px;">
+                    <li>Abre WhatsApp en tu teléfono</li>
+                    <li>Ve a: Ajustes → Dispositivos vinculados</li>
+                    <li>Toca "Vincular un dispositivo"</li>
+                    <li>Escanea el código QR abajo</li>
+                </ol>
+            </div>
+
+            <button id="initBtn" onclick="initSession()">Iniciar Sesión</button>
+
+            <div class="qr-container loading" id="qrContainer">
+                <div class="spinner"></div>
+            </div>
+
+            <p style="text-align: center; color: #999; font-size: 12px; margin-top: 15px;">
+                El QR expira en 60 segundos. Si desaparece, recarga.
+            </p>
+        </div>
+
+        <!-- Chat Section -->
+        <div class="chat-section" id="chatSection">
+            <div class="status" id="statusBar">
+                ✅ Conectado como <strong id="connectedUser">Usuario</strong>
+            </div>
+
+            <div class="api-key-notice" id="apiKeyNotice">
+                ⚠️ Configura tu API Key en el código JavaScript
+            </div>
+
+            <div class="success-message" id="successMessage">
+                ✅ Mensaje enviado correctamente
+            </div>
+
+            <form onsubmit="sendMessage(event)">
+                <div class="form-group">
+                    <label for="number">Número de WhatsApp</label>
+                    <input
+                        type="text"
+                        id="number"
+                        placeholder="573001234567 (con código de país)"
+                        required
+                    />
+                    <small style="color: #999; display: block; margin-top: 5px;">
+                        Formato: código de país + número (ej: 573001234567)
+                    </small>
+                </div>
+
+                <div class="form-group">
+                    <label for="message">Mensaje</label>
+                    <textarea
+                        id="message"
+                        placeholder="Escribe tu mensaje aquí..."
+                        required
+                    ></textarea>
+                    <small style="color: #999; display: block; margin-top: 5px;">
+                        Máximo 4096 caracteres. Soporta emojis 😊
+                    </small>
+                </div>
+
+                <button type="submit" id="sendBtn">Enviar Mensaje</button>
+            </form>
+
+            <div class="button-group">
+                <button class="secondary" type="button" onclick="logout()">
+                    Cerrar Sesión
+                </button>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>WhatsApp API v1.0 - Proyecto educativo</p>
+            <p>Documentación: Ver README.md</p>
+        </div>
+    </div>
+
+    <script>
+        // CONFIGURACIÓN - CAMBIAR ESTO
+        const API_KEY = 'tu-api-key-super-secreta-aqui';
+        const API_URL = window.location.origin + '/api';
+
+        // DOM Elements
+        const qrSection = document.getElementById('qrSection');
+        const chatSection = document.getElementById('chatSection');
+        const qrContainer = document.getElementById('qrContainer');
+        const initBtn = document.getElementById('initBtn');
+        const sendBtn = document.getElementById('sendBtn');
+        const statusBar = document.getElementById('statusBar');
+        const successMessage = document.getElementById('successMessage');
+        const numberInput = document.getElementById('number');
+        const messageInput = document.getElementById('message');
+
+        // Verificar estado al cargar
+        window.addEventListener('load', () => {
+            checkStatus();
+        });
+
+        async function initSession() {
+            initBtn.disabled = true;
+            initBtn.textContent = 'Iniciando...';
+
+            try {
+                const response = await fetch(`${API_URL}/session/start`, {
+                    method: 'POST'
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    qrContainer.classList.add('loading');
+                    pollQR();
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+                initBtn.disabled = false;
+                initBtn.textContent = 'Iniciar Sesión';
+            }
+        }
+
+        async function pollQR() {
+            const response = await fetch(`${API_URL}/session/qr`);
+            const data = await response.json();
+
+            if (data.qr) {
+                qrContainer.innerHTML = `<img src="${data.qr}" alt="QR Code">`;
+                qrContainer.classList.remove('loading');
+
+                // Monitorear estado mientras se escanea
+                const statusCheck = setInterval(() => {
+                    checkStatus();
+                }, 1000);
+
+                // Parar de intentar si se conecta
+                const maxAttempts = 60;
+                let attempts = 0;
+
+                const pollInterval = setInterval(async () => {
+                    const status = await getStatus();
+                    if (status.data?.isConnected) {
+                        clearInterval(pollInterval);
+                        clearInterval(statusCheck);
+                        switchToChatView(status.data.connectedAs);
+                    }
+
+                    attempts++;
+                    if (attempts > maxAttempts) {
+                        clearInterval(pollInterval);
+                        clearInterval(statusCheck);
+                    }
+                }, 1000);
+            } else if (data.status !== 202) {
+                setTimeout(pollQR, 1000);
+            }
+        }
+
+        async function getStatus() {
+            try {
+                const response = await fetch(`${API_URL}/session/status`);
+                return await response.json();
+            } catch (error) {
+                console.error('Error:', error);
+                return { data: { isConnected: false } };
+            }
+        }
+
+        async function checkStatus() {
+            const data = await getStatus();
+
+            if (data.data?.isConnected) {
+                switchToChatView(data.data.connectedAs);
+            }
+        }
+
+        function switchToChatView(userName) {
+            qrSection.classList.remove('active');
+            chatSection.classList.add('active');
+            document.getElementById('connectedUser').textContent = userName || 'Usuario';
+            initBtn.disabled = false;
+            initBtn.textContent = 'Iniciar Sesión';
+        }
+
+        async function sendMessage(e) {
+            e.preventDefault();
+
+            if (!API_KEY || API_KEY === 'tu-api-key-super-secreta-aqui') {
+                alert('⚠️ Configura tu API Key en el código JavaScript');
+                return;
+            }
+
+            const number = numberInput.value;
+            const message = messageInput.value;
+
+            sendBtn.disabled = true;
+            sendBtn.textContent = 'Enviando...';
+
+            try {
+                const response = await fetch(`${API_URL}/messages/send`, {
+                    method: 'POST',
+                    headers: {
+                        'X-API-Key': API_KEY,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ number, message })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    successMessage.classList.add('show');
+                    numberInput.value = '';
+                    messageInput.value = '';
+
+                    setTimeout(() => {
+                        successMessage.classList.remove('show');
+                    }, 3000);
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            } finally {
+                sendBtn.disabled = false;
+                sendBtn.textContent = 'Enviar Mensaje';
+            }
+        }
+
+        async function logout() {
+            if (!confirm('¿Estás seguro de que quieres cerrar sesión?')) {
+                return;
+            }
+
+            try {
+                await fetch(`${API_URL}/session/logout`, {
+                    method: 'POST'
+                });
+
+                qrSection.classList.add('active');
+                chatSection.classList.remove('active');
+                initBtn.disabled = false;
+                initBtn.textContent = 'Iniciar Sesión';
+                qrContainer.innerHTML = '<div class="spinner"></div>';
+                qrContainer.classList.add('loading');
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        }
+    </script>
+</body>
+</html>
