@@ -19,17 +19,17 @@ export const startSession = async (req, res) => {
       });
     }
 
-    // Inicializar cliente
-    logger.info('Inicializando cliente de WhatsApp desde startSession');
-    await whatsappService.initialize();
-    logger.info('initialize() completado, devolviendo respuesta de inicio de sesión');
+    // Inicializar cliente en background (sin esperar)
+    logger.info('Iniciando cliente de WhatsApp en background');
+    whatsappService.initialize(); // No usar await
 
-    return res.status(200).json({
+    return res.status(202).json({
       success: true,
-      message: 'Sesión iniciada. Genera el QR con /api/session/qr',
+      message: 'Inicializando sesión. Consulta el QR con /api/session/qr',
       data: {
-        isReady: whatsappService.getStatus().isReady,
-        hasQR: whatsappService.getStatus().hasQR
+        isReady: false,
+        hasQR: false,
+        isInitializing: true
       },
       warning: WARNING
     });

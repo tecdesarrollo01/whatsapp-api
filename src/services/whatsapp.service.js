@@ -10,6 +10,7 @@ class WhatsAppService {
     this.isReady = false;
     this.qrCode = null;
     this.lastMessageTime = 0;
+    this.isInitializing = false;
   }
 
   getChromiumPath() {
@@ -43,6 +44,13 @@ class WhatsAppService {
   }
 
   async initialize() {
+    // Si ya está inicializando o listo, no hacer nada
+    if (this.isInitializing || this.client) {
+      logger.info('Cliente ya está inicializando o listo');
+      return;
+    }
+
+    this.isInitializing = true;
     const chromiumPath = this.getChromiumPath();
     const puppeteerConfig = {
       headless: true,
@@ -99,6 +107,7 @@ class WhatsAppService {
     // Evento: Cliente conectado
     this.client.on('ready', () => {
       this.isReady = true;
+      this.isInitializing = false;
       logger.info({ info: this.client.info }, '✅ Cliente de WhatsApp conectado');
       if (this.client.info) {
         logger.info({ pushname: this.client.info.pushname }, '📱 Conectado como');
@@ -117,14 +126,13 @@ class WhatsAppService {
       logger.error({ err: error }, '❌ Error en cliente WhatsApp (evento error)');
     });
 
-    try {
-      logger.debug('Llamando client.initialize()...');
-      await this.client.initialize();
-      logger.info('client.initialize() completado sin excepciones');
-    } catch (error) {
-      logger.error({ err: error }, '❌ Error inicializando cliente');
-      throw error;
-    }
+    // Inicializar en background sin esperar
+    this.client.initialize().catch((error) => {
+      this.isInitializing = false;
+      logger.error({ err: error }, '❌ Error inicializando cliente en background');
+    });
+
+    logger.info('Cliente iniciado en background');
   }
 
   async sendMessage(number, message) {
