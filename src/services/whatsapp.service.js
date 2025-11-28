@@ -197,15 +197,33 @@ class WhatsAppService {
 
   async logout() {
     try {
-      if (this.client) {
-        await this.client.logout();
-        await this.client.destroy();
+      if (!this.client) {
+        logger.info('Cliente no está inicializado');
+        return;
       }
+
+      try {
+        await this.client.logout();
+      } catch (logoutError) {
+        // Si el logout falla porque la sesión ya se cerró, continuar con destroy
+        logger.warn({ err: logoutError }, 'Advertencia durante logout, continuando con destroy');
+      }
+
+      try {
+        await this.client.destroy();
+      } catch (destroyError) {
+        logger.warn({ err: destroyError }, 'Advertencia durante destroy');
+      }
+
       this.isReady = false;
       this.qrCode = null;
+      this.client = null;
       logger.info('✅ Sesión de WhatsApp cerrada');
     } catch (error) {
       logger.error({ err: error }, '❌ Error al cerrar sesión');
+      this.isReady = false;
+      this.qrCode = null;
+      this.client = null;
       throw error;
     }
   }
